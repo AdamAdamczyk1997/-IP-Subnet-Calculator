@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<meta name="author" content="Adam Adamczyk">
+	<title>JavaScript form validation - checking IP address</title>
+		<style>
+			body {
+			font-family:monospace;
+			font-size:16px;
+			}
+			.put {
+			width:30px;
+			}
+
+			.result {
+			border-bottom: 1px solid #6a6ade;
+			border-right: 1px solid #6a6ade;
+			}
+			.result .label {
+			display:inline-block;
+			width:200px;
+			background:#aaf;
+			}
+		</style>
+	</head>
+
+
+<body>
+
+	<h1>KALKULATOR PODSIECI</h1>
+
+	<input type='text' class='put' id='q1'> .
+	<input type='text' class='put' id='q2'> .
+	<input type='text' class='put' id='q3'> .
+	<input type='text' class='put' id='q4'> /
+	<input type='text' class='put' id='cidr'>
+	<button onclick='calculate();'>Oblicz</button>
+
+
+		<script>
+			function calculate(){
+				var q1=document.getElementById('q1').value;
+				var q2=document.getElementById('q2').value;
+				var q3=document.getElementById('q3').value;
+				var q4=document.getElementById('q4').value;
+				var cidr=document.getElementById('cidr').value;
+
+
+
+				if(
+					(q1>=0 && q1<=255) &&
+					(q2>=0 && q2<=255) &&
+					(q3>=0 && q3<=255) &&
+					(q4>=0 && q4<=255) &&
+					(cidr>=0 && cidr<=32)
+				){
+
+				document.getElementById('resIP').innerHTML=q1 + "." + q2 + "." + q3 + "." + q4;
+
+
+				var ipBin={};
+				ipBin[1]=String("00000000"+parseInt(q1,10).toString(2)).slice(-8);
+				ipBin[2]=String("00000000"+parseInt(q2,10).toString(2)).slice(-8);
+				ipBin[3]=String("00000000"+parseInt(q3,10).toString(2)).slice(-8);
+				ipBin[4]=String("00000000"+parseInt(q4,10).toString(2)).slice(-8);
+
+				var standartClass="";
+				
+				if(q1<=126) {
+					standartClass="A";
+				}else if (q1==127) {
+					standartClass="zwrotny adres IP"
+				}else if (q1>=128 && q1<=191) {
+					standartClass="B";
+				}else if (q1>=192 && q1<=223) {
+					standartClass="C";
+				}else if (q1>=224 && q1<=239) {
+					standartClass="D";
+				}else if (q1>=240 && q1<=225) {
+					standartClass="E";
+				}else {
+					standartClass="Poza zakresem!";
+				}
+
+
+				var mask=cidr;
+				var importantBlock=Math.ceil(mask/8);
+				var importantBlockBinary=ipBin[importantBlock];
+				var maskBinaryBlockCount=mask%8;
+				
+				if(maskBinaryBlockCount==0)importantBlock++;
+				
+				var maskBinaryBlock="";
+				var maskBlock="";
+				
+				for(var i=1;i<=8;i++){
+					if(maskBinaryBlockCount>=i){
+						maskBinaryBlock+="1";
+					}else{
+						maskBinaryBlock+="0";
+					}
+				}
+
+				maskBlock=parseInt(maskBinaryBlock,2);
+
+
+				var netBlockBinary="";
+				var bcBlockBinary="";
+				
+				for(var i=1;i<=8;i++){
+					if(maskBinaryBlock.substr(i-1,1)=="1"){
+						netBlockBinary+=importantBlockBinary.substr(i-1,1);
+						bcBlockBinary+=importantBlockBinary.substr(i-1,1);
+					}else{
+						netBlockBinary+="0";
+						bcBlockBinary+="1";
+					}
+				}
+
+
+					var mask="";
+					var maskBinary="";
+					var net="";
+					var bc="";
+					var netBinary="";
+					var bcBinary="";
+					var rangeA="";
+					var rangeB="";
+					var rangeBinA="";
+					var rangeBinB="";
+
+				for(var i=1;i<=4;i++){
+				
+					if(importantBlock>i) {
+						mask+="255";
+						maskBinary+="11111111";
+						netBinary+=ipBin[i];
+						bcBinary+=ipBin[i];
+						net+=parseInt(ipBin[i],2);
+						bc+=parseInt(ipBin[i],2);
+						rangeA+=parseInt(ipBin[i],2);
+						rangeB+=parseInt(ipBin[i],2);
+						rangeBinA+=ipBin[i];
+						rangeBinB+=ipBin[i];
+					}
+					else if (importantBlock==i) {				
+						mask+=maskBlock;
+						maskBinary+=maskBinaryBlock;
+						netBinary+=netBlockBinary;
+						bcBinary+=bcBlockBinary;
+						net+=parseInt(netBlockBinary,2);
+						bc+=parseInt(bcBlockBinary,2);
+						rangeA+=(parseInt(netBlockBinary,2)+1);
+						rangeB+=(parseInt(bcBlockBinary,2)-1);
+						rangeBinA+=netBlockBinary+1;
+						rangeBinB+=bcBlockBinary-1;
+						
+					}
+					else {	
+						mask+=0;
+						maskBinary+="00000000";
+						netBinary+="00000000";
+						bcBinary+="11111111";
+						net+="0";
+						bc+="255";
+						rangeA+=0;
+						rangeB+=255;
+						rangeBinA+="00000000";
+						rangeBinB+="11111111";
+					}
+
+					if(i<4){	
+						mask+=".";
+						maskBinary+=".";
+						netBinary+=".";
+						bcBinary+=".";
+						net+=".";
+						bc+=".";
+						rangeA+=".";
+						rangeB+=".";
+						rangeBinA+=".";
+						rangeBinB+=".";
+					}
+				}
+					var hosts = ((Math.pow(2, 32-cidr))-2);
+
+					document.getElementById('resMask').innerHTML=mask;
+					document.getElementById('resNet').innerHTML=net;
+					document.getElementById('resBC').innerHTML=bc;
+					document.getElementById('resRange1').innerHTML=rangeA;
+					document.getElementById('resRange2').innerHTML=rangeB;
+					document.getElementById('resBinRange1').innerHTML=rangeBinA;
+					document.getElementById('resBinRange2').innerHTML=rangeBinB;
+					document.getElementById('resBinIP').innerHTML=ipBin[1]+"."+ipBin[2]+"."+ipBin[3]+"."+ipBin[4];
+					document.getElementById('resBinMask').innerHTML=maskBinary;
+					document.getElementById('resBinNet').innerHTML=netBinary;
+					document.getElementById('resBinBC').innerHTML=bcBinary;
+					document.getElementById('resClass').innerHTML=standartClass;
+					document.getElementById('amount').innerHTML=hosts;
+				}
+			else{
+					alert("Błędny adres IP!");
+					}
+			}
+			
+			
+		</script>
+
+
+	 <hr>
+	<div class='result'>
+		<span class=label>Adres IP :</span>
+		<span class=value id=resIP></span>
+		<span class=label></span>
+		<span class=value id=resBinIP></span>
+	</div>
+
+	<div class='result'>
+		<span class=label>Adres sieci :</span>
+		<span class=value id=resNet></span>
+		<span class=label></span>
+		<span class=value id=resBinNet></span>
+	</div>
+
+	<div class='result'>
+		<span class=label>Klasa sieci :</span>
+		<span class=value id=resClass></span>
+	</div>
+
+	<div class='result'>
+		<span class=label>Pełna maska sieci :</span>
+		<span class=value id=resMask></span>
+		<span class=label></span>
+		<span class=value id=resBinMask></span>
+	</div>
+
+	<div class='result'>
+		<span class=label>Adres broadcast:</span>
+		<span class=value id=resBC></span>
+		<span class=label></span>
+		<span class=value id=resBinBC></span>
+	</div>
+
+	<div class='result'>
+		<span class=label>Pierwszy adres hosta :</span>
+		<span class=value id=resRange1></span>
+		<span class=label></span>
+		<span class=value id=resBinRange1></span>
+	</div>
+
+	<div class='result'>
+		<span class=label>Ostatni adres hosta :</span>
+		<span class=value id=resRange2></span>
+		<span class=label></span>
+		<span class=value id=resBinRange2></span>
+	</div>
+	
+	<div class='result'>
+		<span class=label>Maksymalna liczba hostów :</span>
+		<span class=value id=amount></span>
+	</div>
+
+	
+
+</body>
+
+</html>
